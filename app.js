@@ -17,39 +17,38 @@ var jadiscoOptions = {
     'path': '/'
 }
 
+//render = "";
+
 app.get('/', function(req, res){
-
-    // var p1 = new Promise(function(resolve, reject) {
-    //   resolve('Success!');
-    //   // or
-    //   // reject ("Error!");
-    // });
-
-    // p1.then(function(value) {
-    //   console.log(value); // Success!
-    //   res.send(value);
-    // }, function(reason) {
-    //   console.log(reason); // Error!
-    //   res.send(reason);
-    // });
 
     var games = getPagesArray();
 
-    loadPage(games[1]).then(getBestPrice).then(function(render){
-        res.send(render);
+    //var render = "";
+
+    // loadPage(games[0]).then(getBestPrice).then(function(chunk){
+    //     return chunk;
+    // }).then(function(render){
+    //     res.send(render);
+    // });
+
+    Promise.all(
+        games.map(loadPage)
+    ).then(function(pages){
+        return Promise.all(pages.map(getBestPrice))
+    }).then(function(render){
+
+        renderr = render.reduce(function(renderr,i){
+            return renderr + i;
+        },"")
+
+        res.send(renderr);
     });
 
-    
-    
-    //games.forEach(function(options){
-    //    loadPage(options, getBestPrice);
-    //})
-
-    //options.res = res;
-    //loadPage(options, getBestPrice);
-
-    //res.send(render);
-
+    // return Promise.all(
+    // // Map our array of chapter urls to
+    // // an array of chapter json promises
+    // story.chapterUrls.map(getJSON)
+    //  );
 });
 
 app.listen(process.env.PORT || 5000, function(){
@@ -75,50 +74,22 @@ var loadPage = function(options){
     
 }
 
-function get(url) {
-  // Return a new promise.
-  return new Promise(function(resolve, reject) {
-    // Do the usual XHR stuff
-    var req = new XMLHttpRequest();
-    req.open('GET', url);
-
-    req.onload = function() {
-      // This is called even on 404 etc
-      // so check the status
-      if (req.status == 200) {
-        // Resolve the promise with the response text
-        resolve(req.response);
-      }
-      else {
-        // Otherwise reject with the status text
-        // which will hopefully be a meaningful error
-        reject(Error(req.statusText));
-      }
-    };
-
-    // Handle network errors
-    req.onerror = function() {
-      reject(Error("Network Error"));
-    };
-
-    // Make the request
-    req.send();
-  });
-}
-
 var getBestPrice = function(data){
-    return new Promise(function(resolve, reject){
-        render = "";
+    
+    return new Promise(function(resolve){
+        var render = "";
 
         var $ = cheerio.load(data);
-
                 
         render += $('.game-title').text() + " ";
         render += $('.local-price-column').eq(1).text();
         render += ' <a href="https://salenauts.com' + $('.price-button').eq(2).attr('href') + '">link</a></br>';
 
         resolve(render);
-    });
+
+    });  
+
+
 
    
 
