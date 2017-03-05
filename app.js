@@ -6,7 +6,8 @@ var cheerio = require('cheerio');
 var games = [
     'shenzhen-io',
     'undertale',
-    'doom'
+    'doom',
+    'gang-beasts'
 ]
 
 app.get('/', function(req, res){
