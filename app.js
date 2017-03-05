@@ -1,35 +1,17 @@
 var express = require('express');
 var http = require('http');
 var app = express();
-
 var cheerio = require('cheerio');
-
-//var render = "";
 
 var games = [
     'shenzhen-io',
-    'undertale'
+    'undertale',
+    'doom'
 ]
-
-var jadiscoOptions = {
-    'host': 'jadisco.pl',
-    'port': 80,
-    'path': '/'
-}
-
-//render = "";
 
 app.get('/', function(req, res){
 
     var games = getPagesArray();
-
-    //var render = "";
-
-    // loadPage(games[0]).then(getBestPrice).then(function(chunk){
-    //     return chunk;
-    // }).then(function(render){
-    //     res.send(render);
-    // });
 
     Promise.all(
         games.map(loadPage)
@@ -43,12 +25,6 @@ app.get('/', function(req, res){
 
         res.send(renderr);
     });
-
-    // return Promise.all(
-    // // Map our array of chapter urls to
-    // // an array of chapter json promises
-    // story.chapterUrls.map(getJSON)
-    //  );
 });
 
 app.listen(process.env.PORT || 5000, function(){
@@ -88,12 +64,6 @@ var getBestPrice = function(data){
         resolve(render);
 
     });  
-
-
-
-   
-
-    //data.res.send(price);
 }
 
 var getPagesArray = function(){
