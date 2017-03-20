@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  table
+    each val in games
+      tr
+        td= val.title
+        td= val.cut
+        td: a(href=val.link, target='_blank')=val.price

@@ -2,6 +2,7 @@ var express = require('express');
 var http = require('http');
 var app = express();
 var cheerio = require('cheerio');
+var path = require('path');
 
 var games = [
     'shenzhen-io',
@@ -9,6 +10,10 @@ var games = [
     'doom',
     'gang-beasts'
 ]
+
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res){
 
@@ -19,12 +24,10 @@ app.get('/', function(req, res){
     ).then(function(pages){
         return Promise.all(pages.map(getBestPrice))
     }).then(function(render){
-
-        renderr = render.reduce(function(renderr,i){
-            return renderr + i;
-        },"")
-
-        res.send(renderr);
+        var games = {
+            games: render
+        }
+        res.render('index', games);
     });
 });
 
@@ -52,24 +55,35 @@ var loadPage = function(options){
 }
 
 var getBestPrice = function(data){
-    
     return new Promise(function(resolve){
-        var render = "";
-
         var $ = cheerio.load(data);
-                
-        render += $('.game-title').text() + " ";
-        render += $('.local-price-column').eq(1).text();
-        render += ' <a href="https://salenauts.com' + $('.price-button').eq(2).attr('href') + '">link</a></br>';
+
+        var title = $('.game-title').text();
+        title = replaceAll(title, '\t', '');
+        title = replaceAll(title, '\n', '');
+
+        var price = $('.local-price-column').eq(1).text();
+        var cut = $('.discount-column').eq(1).text();
+        var link = "https://salenauts.com" + $('.price-button').eq(2).attr('href')
+
+
+        var render = {
+            title: title,
+            price: price,
+            cut: cut,
+            link: link
+        }
 
         resolve(render);
-
     });  
+}
+
+function replaceAll(str, find, replace) {
+  return str.replace(new RegExp(find, 'g'), replace);
 }
 
 var getPagesArray = function(){
     var result;
-
     result = games.map(function(item){
         var row = [];
         row['host'] = 'salenauts.com';
@@ -77,6 +91,5 @@ var getPagesArray = function(){
         row['path'] = '/pl/game/' + item +'/';
         return row;
     });
-
     return result;
 }
