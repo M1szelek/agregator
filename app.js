@@ -8,7 +8,8 @@ var games = [
     'shenzhen-io',
     'undertale',
     'doom',
-    'gang-beasts'
+    'gang-beasts',
+    'redout'
 ]
 
 app.set('views', path.join(__dirname, 'views'));
