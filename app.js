@@ -9,7 +9,9 @@ var games = [
     'undertale',
     'doom',
     'gang-beasts',
-    'redout'
+    'redout',
+    'domina',
+    'beat-cop'
 ]
 
 app.set('views', path.join(__dirname, 'views'));
