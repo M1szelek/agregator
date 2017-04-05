@@ -3,15 +3,17 @@ var http = require('http');
 var app = express();
 var cheerio = require('cheerio');
 var path = require('path');
+var MongoClient = require('mongodb').MongoClient;
+var assert = require('assert');
 
 var games = [
-    'shenzhen-io',
-    'undertale',
-    'doom',
-    'gang-beasts',
-    'redout',
-    'domina',
-    'beat-cop'
+'shenzhen-io',
+'undertale',
+'doom',
+'gang-beasts',
+'redout',
+'domina',
+'beat-cop'
 ]
 
 app.set('views', path.join(__dirname, 'views'));
@@ -20,19 +22,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res){
 
+
+
     var games = getPagesArray();
 
     Promise.all(
         games.map(loadPage)
-    ).then(function(pages){
-        return Promise.all(pages.map(getBestPrice))
-    }).then(function(render){
-        var games = {
-            games: render
-        }
-        res.render('index', games);
+        ).then(function(pages){
+            return Promise.all(pages.map(getBestPrice))
+        }).then(function(render){
+            var games = {
+                games: render
+            }
+            res.render('index', games);
+        });
     });
-});
 
 app.listen(process.env.PORT || 5000, function(){
     console.log("App started!");
@@ -40,16 +44,16 @@ app.listen(process.env.PORT || 5000, function(){
 
 var loadPage = function(options){
     return new Promise(function(resolve, reject){
-            http.get(options, function(http_res) {
-                var data = "";
+        http.get(options, function(http_res) {
+            var data = "";
 
-                http_res.on("data", function (chunk) {
-                    data += chunk;
-                });
+            http_res.on("data", function (chunk) {
+                data += chunk;
+            });
 
-                http_res.on("end", function () {
-                    resolve(data);
-                });
+            http_res.on("end", function () {
+                resolve(data);
+            });
         }).on('error', function(e) {
             reject("Got error: " + e.message);
         });
@@ -86,6 +90,12 @@ function replaceAll(str, find, replace) {
 }
 
 var getPagesArray = function(){
+
+
+
+
+
+
     var result;
     result = games.map(function(item){
         var row = [];
@@ -96,3 +106,35 @@ var getPagesArray = function(){
     });
     return result;
 }
+
+function connectToDb(){
+    return MongoClient.connect(process.env.MONGODB_URI);
+}
+
+var getGamesFromDb = function(db) {
+
+  return new Promise(function(resolve){
+    var collection = db.collection('games');
+
+    collection.findOne(
+        {},{}
+        , function(err, result) {
+            assert.equal(err, null);
+            console.log("Fetched game list.");
+            resolve(result);
+        });
+})
+
+  
+}
+
+connectToDb()
+    .then(
+        function(db){
+            return getGamesFromDb(db)
+        })
+    .then(
+        function(result){
+            console.log(result);
+        }
+    );

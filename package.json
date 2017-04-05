@@ -12,6 +12,7 @@
   "dependencies": {
     "cheerio": "^0.22.0",
     "express": "^4.14.0",
+    "mongodb": "^2.2.25",
     "pug": "^2.0.0-beta11"
   }
 }
