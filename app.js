@@ -108,22 +108,22 @@ var getPagesArray = function(){
 }
 
 function connectToDb(){
-    return MongoClient.connect(process.env.MONGODB_URI);
+    return MongoClient.connect('mongodb://heroku_kgcb215t:8hn2sb254p5lenpekom4vmmcj@ds151070.mlab.com:51070/heroku_kgcb215t');
 }
 
 var getGamesFromDb = function(db) {
 
   return new Promise(function(resolve){
-    var collection = db.collection('games');
+        var collection = db.collection('games');
 
-    collection.findOne(
-        {},{}
-        , function(err, result) {
-            assert.equal(err, null);
-            console.log("Fetched game list.");
-            resolve(result);
-        });
-})
+        collection.find(
+            {},{}
+            , function(err, result) {
+                assert.equal(err, null);
+                console.log("Fetched game list.");
+                resolve(result.toArray());
+            });
+  })
 
   
 }
@@ -135,6 +135,8 @@ connectToDb()
         })
     .then(
         function(result){
+            //console.log(result);
             console.log(result);
+            
         }
     );
