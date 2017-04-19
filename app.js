@@ -6,25 +6,11 @@ var path = require('path');
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 
-// var games = [
-// 'shenzhen-io',
-// 'undertale',
-// 'doom',
-// 'gang-beasts',
-// 'redout',
-// 'domina',
-// 'beat-cop'
-// ]
-
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res){
-
-
-
-    //var games = getPagesArray();
 
     connectToDb()
     .then(
@@ -118,7 +104,7 @@ var getPage = function(game){
 }
 
 function connectToDb(){
-    return MongoClient.connect('mongodb://heroku_kgcb215t:8hn2sb254p5lenpekom4vmmcj@ds151070.mlab.com:51070/heroku_kgcb215t');
+    return MongoClient.connect(process.env.MONGODB_URI);
 }
 
 var getGamesFromDb = function(db) {
@@ -137,26 +123,3 @@ var getGamesFromDb = function(db) {
 
   
 }
-
-// connectToDb()
-// .then(
-//     function(db){
-//         return getGamesFromDb(db)
-//     })
-// .then(
-//     function(games){
-//             //console.log(result);
-//             return Promise.all(games.map(getPage));
-            
-//         }
-//         )
-// .then(
-//     function(pages){
-//         return Promise.all(pages.map(getBestPrice))
-//     }
-//     ).then(function(render){
-//         var games = {
-//             games: render
-//         }
-//         res.render('index', games);
-//     });
