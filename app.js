@@ -6,15 +6,15 @@ var path = require('path');
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 
-var games = [
-'shenzhen-io',
-'undertale',
-'doom',
-'gang-beasts',
-'redout',
-'domina',
-'beat-cop'
-]
+// var games = [
+// 'shenzhen-io',
+// 'undertale',
+// 'doom',
+// 'gang-beasts',
+// 'redout',
+// 'domina',
+// 'beat-cop'
+// ]
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -24,13 +24,28 @@ app.get('/', function(req, res){
 
 
 
-    var games = getPagesArray();
+    //var games = getPagesArray();
 
-    Promise.all(
-        games.map(loadPage)
-        ).then(function(pages){
-            return Promise.all(pages.map(getBestPrice))
-        }).then(function(render){
+    connectToDb()
+    .then(
+        function(db){
+            return getGamesFromDb(db)
+        })
+    .then(
+        function(games){
+            return Promise.all(games.map(getPage));
+            
+        }
+        )
+    .then(
+        function(pages){
+            return Promise.all(pages.map(loadPage));
+        }
+        )
+    .then(function(pages){
+        return Promise.all(pages.map(getBestPrice));
+    })
+    .then(function(render){
             var games = {
                 games: render
             }
@@ -89,22 +104,17 @@ function replaceAll(str, find, replace) {
   return str.replace(new RegExp(find, 'g'), replace);
 }
 
-var getPagesArray = function(){
+var getPage = function(game){
 
-
-
-
-
-
-    var result;
-    result = games.map(function(item){
-        var row = [];
-        row['host'] = 'salenauts.com';
-        row['port'] = 80;
-        row['path'] = '/pl/game/' + item +'/';
-        return row;
+    return new Promise(function(resolve){
+        var result = [];
+        result['host'] = 'salenauts.com';
+        result['port'] = 80;
+        result['path'] = '/pl/game/' + game.name +'/';
+        resolve(result);
     });
-    return result;
+
+    
 }
 
 function connectToDb(){
@@ -114,29 +124,39 @@ function connectToDb(){
 var getGamesFromDb = function(db) {
 
   return new Promise(function(resolve){
-        var collection = db.collection('games');
+    var collection = db.collection('games');
 
-        collection.find(
-            {},{}
-            , function(err, result) {
-                assert.equal(err, null);
-                console.log("Fetched game list.");
-                resolve(result.toArray());
-            });
-  })
+    collection.find(
+        {},{}
+        , function(err, result) {
+            assert.equal(err, null);
+            console.log("Fetched game list.");
+            resolve(result.toArray());
+        });
+})
 
   
 }
 
-connectToDb()
-    .then(
-        function(db){
-            return getGamesFromDb(db)
-        })
-    .then(
-        function(result){
-            //console.log(result);
-            console.log(result);
+// connectToDb()
+// .then(
+//     function(db){
+//         return getGamesFromDb(db)
+//     })
+// .then(
+//     function(games){
+//             //console.log(result);
+//             return Promise.all(games.map(getPage));
             
-        }
-    );
+//         }
+//         )
+// .then(
+//     function(pages){
+//         return Promise.all(pages.map(getBestPrice))
+//     }
+//     ).then(function(render){
+//         var games = {
+//             games: render
+//         }
+//         res.render('index', games);
+//     });
