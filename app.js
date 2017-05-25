@@ -3,16 +3,8 @@ var http = require('http');
 var app = express();
 var cheerio = require('cheerio');
 var path = require('path');
-
-var games = [
-    'shenzhen-io',
-    'undertale',
-    'doom',
-    'gang-beasts',
-    'redout',
-    'domina',
-    'beat-cop'
-]
+var MongoClient = require('mongodb').MongoClient;
+var assert = require('assert');
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -20,19 +12,32 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res){
 
-    var games = getPagesArray();
-
-    Promise.all(
-        games.map(loadPage)
-    ).then(function(pages){
-        return Promise.all(pages.map(getBestPrice))
-    }).then(function(render){
-        var games = {
-            games: render
+    connectToDb()
+    .then(
+        function(db){
+            return getGamesFromDb(db)
+        })
+    .then(
+        function(games){
+            return Promise.all(games.map(getPage));
+            
         }
-        res.render('index', games);
+        )
+    .then(
+        function(pages){
+            return Promise.all(pages.map(loadPage));
+        }
+        )
+    .then(function(pages){
+        return Promise.all(pages.map(getBestPrice));
+    })
+    .then(function(render){
+            var games = {
+                games: render
+            }
+            res.render('index', games);
+        });
     });
-});
 
 app.listen(process.env.PORT || 5000, function(){
     console.log("App started!");
@@ -40,16 +45,16 @@ app.listen(process.env.PORT || 5000, function(){
 
 var loadPage = function(options){
     return new Promise(function(resolve, reject){
-            http.get(options, function(http_res) {
-                var data = "";
+        http.get(options, function(http_res) {
+            var data = "";
 
-                http_res.on("data", function (chunk) {
-                    data += chunk;
-                });
+            http_res.on("data", function (chunk) {
+                data += chunk;
+            });
 
-                http_res.on("end", function () {
-                    resolve(data);
-                });
+            http_res.on("end", function () {
+                resolve(data);
+            });
         }).on('error', function(e) {
             reject("Got error: " + e.message);
         });
@@ -85,14 +90,36 @@ function replaceAll(str, find, replace) {
   return str.replace(new RegExp(find, 'g'), replace);
 }
 
-var getPagesArray = function(){
-    var result;
-    result = games.map(function(item){
-        var row = [];
-        row['host'] = 'salenauts.com';
-        row['port'] = 80;
-        row['path'] = '/pl/game/' + item +'/';
-        return row;
+var getPage = function(game){
+
+    return new Promise(function(resolve){
+        var result = [];
+        result['host'] = 'salenauts.com';
+        result['port'] = 80;
+        result['path'] = '/pl/game/' + game.name +'/';
+        resolve(result);
     });
-    return result;
+
+    
+}
+
+function connectToDb(){
+    return MongoClient.connect(process.env.MONGODB_URI);
+}
+
+var getGamesFromDb = function(db) {
+
+  return new Promise(function(resolve){
+    var collection = db.collection('games');
+
+    collection.find(
+        {},{}
+        , function(err, result) {
+            assert.equal(err, null);
+            console.log("Fetched game list.");
+            resolve(result.toArray());
+        });
+})
+
+  
 }
