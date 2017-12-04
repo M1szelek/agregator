@@ -1,10 +1,10 @@
-var express = require('express');
-var http = require('http');
-var app = express();
-var cheerio = require('cheerio');
-var path = require('path');
-var MongoClient = require('mongodb').MongoClient;
-var assert = require('assert');
+let express = require('express');
+let http = require('http');
+let app = express();
+let cheerio = require('cheerio');
+let path = require('path');
+let MongoClient = require('mongodb').MongoClient;
+let assert = require('assert');
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -32,7 +32,7 @@ app.get('/', function(req, res){
         return Promise.all(pages.map(getBestPrice));
     })
     .then(function(render){
-            var games = {
+            let games = {
                 games: render
             }
             res.render('index', games);
@@ -43,10 +43,10 @@ app.listen(process.env.PORT || 5000, function(){
     console.log("App started!");
 });
 
-var loadPage = function(options){
+let loadPage = function(options){
     return new Promise(function(resolve, reject){
         http.get(options, function(http_res) {
-            var data = "";
+            let data = "";
 
             http_res.on("data", function (chunk) {
                 data += chunk;
@@ -62,20 +62,20 @@ var loadPage = function(options){
     
 }
 
-var getBestPrice = function(data){
+let getBestPrice = function(data){
     return new Promise(function(resolve){
-        var $ = cheerio.load(data);
+        let $ = cheerio.load(data);
 
-        var title = $('.game-title').text();
+        let title = $('.game-title').text();
         title = replaceAll(title, '\t', '');
         title = replaceAll(title, '\n', '');
 
-        var price = $('.local-price-column').eq(1).text();
-        var cut = $('.discount-column').eq(1).text();
-        var link = "https://salenauts.com" + $('.price-button').eq(2).attr('href')
+        let price = $('.local-price-column').eq(1).text();
+        let cut = $('.discount-column').eq(1).text();
+        let link = "https://salenauts.com" + $('.price-button').eq(2).attr('href')
 
 
-        var render = {
+        let render = {
             title: title,
             price: price,
             cut: cut,
@@ -90,13 +90,16 @@ function replaceAll(str, find, replace) {
   return str.replace(new RegExp(find, 'g'), replace);
 }
 
-var getPage = function(game){
+let getPage = function(game){
 
     return new Promise(function(resolve){
-        var result = [];
+        let result = [];
+        if(!game.type){
+            game.type = 'game';
+        }
         result['host'] = 'salenauts.com';
         result['port'] = 80;
-        result['path'] = '/pl/game/' + game.name +'/';
+        result['path'] = `/pl/${game.type}/${game.name}/`;
         resolve(result);
     });
 
@@ -107,10 +110,10 @@ function connectToDb(){
     return MongoClient.connect(process.env.MONGODB_URI);
 }
 
-var getGamesFromDb = function(db) {
+let getGamesFromDb = function(db) {
 
   return new Promise(function(resolve){
-    var collection = db.collection('games');
+    let collection = db.collection('games');
 
     collection.find(
         {},{}
